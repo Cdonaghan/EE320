@@ -82,14 +82,13 @@ tQ3 = (0:Ts:0.256);
 
 figure(3);
 subplot(2,1,1)
-plot(tQ3,x1fsamplesQ3);
+plot(tQ3,x1);
 title("analysis q3")
 xlabel("time(s)"); % label axes
 ylabel("sample parameters");
 subplot(2,1,2)
-plot(tQ3,x2fsamplesQ3);
+plot(tQ3,x2);
 title("analysis q3")
 xlabel("time(s)"); % label axes
 ylabel("sample parameters");
-%%attempted to estimate 2 similar peaks then figure out delay between them.
 

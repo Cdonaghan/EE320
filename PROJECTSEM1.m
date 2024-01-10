@@ -16,13 +16,16 @@ sound([u1 u2],fs); % play back stereo
 sound(x1,8000);
 
 %% Question 1
-%time is 1/freq = 0.125ms
+
 %from plot this is a discrete time signal. therefore period equals time between 2 points
 x1F200Samples = x1(1:200);
 Ts = 1/fs; % sampling period [s]
-t = (0:Ts:0.024875); % sampled time scale over 199 samples
-fo = (2*pi*fs); % signal angular freq = 50,265.482
+t = (1:200)/fs;
+fo = (2*pi)/Ts; % signal angular freq = 50,265.482
 foeqn = (2*pi*fo/fs);
+%time is 1/freq = 2.25ms from plot
+sampleTime = 0.00225;
+
 
 figure (1);
 plot(t,x1F200Samples,'r--');
@@ -75,7 +78,7 @@ x2fsamplesQ3 = x2(19500:21548);
 
 %setting time to constraint parameters to accomodate for samples in in Q3
 %so with parameters you are dealing with x1 and x2 as a whole so set yur
-%time parameter to 0.000125 * 35999(number of x1 and samples)
+%time parameter to 0.000225 * 35999(number of x1 and samples)
 %time delay for full of x1 and x2  = 4.499875
 tQ3 = (0:Ts:0.256);
 %time delay for full of x1 and x2  = );
@@ -93,15 +96,15 @@ xlabel("time(s)"); % label axes
 ylabel("sample parameters");
 %%attempted to estimate 2 similar peaks then figure out delay between them.
 
-%AI for delay estimation
+
 % Calculate cross-correlation
-cross_corr = xcorr(x1fsamplesQ3, x2fsamplesQ3);
+cross_corr = xcorr(x2fsamplesQ3, x1fsamplesQ3);
 % Find the index of the maximum correlation
 [max_corr, max_index] = max(cross_corr);
 % Estimate the relative delay in terms of sample indices
 relative_delay = max_index - length(x1fsamplesQ3);
 fprintf('Relative delay between x1 and x2: %d samples\n', relative_delay);
-%comes out to -1 samples
+%comes out to 1 samples
 
 
 %% Q4
@@ -138,35 +141,26 @@ peak_frequency_index = find(G == max(G)); %finding sample number where frequency
 fprintf('Gain at peak frequency: %.4f\n', G(peak_frequency_index)); %gain for sample number 
 fprintf('Phase at peak frequency: %.4f radians\n', A(peak_frequency_index)); %angle for sample number
 %Also could be guessed from graph estimation but this is still the same
-%principle justified
+%principle justified - periodic angle and discrete magnitude
 
 %% Q5
 
 fs = 8000; % sampling frequency in Hertz
 Range = (19501:21548); % window of samples to investigate
 N = length(Range); % number of samples
-X1 = fft(x1(Range)); % Fourier coefficients via fft()
+X1 = fft(x1(Range));% Fourier coefficients via fft()
+X2 = fft(x2(Range));
 f = (0:(N-1))/N*fs; % frequency scale
 figure();
 subplot(2, 1, 1);
 plot(f,abs(X1)); % plot magnitude of coefficient
 xlabel('frequency f / [Hz]'); % label axes
 ylabel('magnitude');
-X2 = fft(x2(Range)); % Fourier coefficients via fft()
+G_Q5 = fft(x2(Range)); % Fourier coefficients via fft()
 subplot(2, 1, 2);
 plot(f,abs(X2)); % plot magnitude of coefficient
 xlabel('frequency f / [Hz]'); % label axes
 ylabel('magnitude');
-
-
-%phase
-phaseQ5 = angle(X2) - angle(X1);
-figure();
-
-plot(f, phaseQ5);
-title('Delay Difference vs Frequency');
-xlabel('Frequency (Hz)');
-ylabel('Delay Difference (radians)');
 
 %The gain and delay difference plots will provide insights into how the signals
 %x1[n] and x2[n]​ differ in terms of magnitude and phase across different frequencies.
@@ -175,24 +169,155 @@ ylabel('Delay Difference (radians)');
 %from angle plot delay estimate = 0.3 radians, 17.1887 degrees
 
 %part 2
-theta1 = angle(X1);
+thetaQ5 = angle(X1);
 figure();
-plot(f, theta1);
+plot(f, thetaQ5);
 title('Phase Angle vs Frequency');
 xlabel('Frequency (Hz)');
 ylabel('Phase Angle (radians)');
 %spikes between 3 and -3 so find 3 radians in degrees = +/- 171.887 degrees
+%could maybe take one angle away from other to understand the phase delay,
+%maybe inverse the fourier transform to the time domain and then estimate
+%delay from a plot, gain is a little different as you can evauluate from
+%plots when dealing with magnitude, find gain of q5 and q6 then evaluate
+%the peaks?
 
-%% Q6
-%The first speaker is quiet during the period 24800 < n ≤ 25824.
-%Use this to estimate the gain and delay difference between x1[n] and x2[n] for speaker 2. W.r.t. Fig. 1, what is the
-%estimated angle ϑ2?
-RangeQ6 = (24800:25824);
-X2 = fft(x2(Range)); % Fourier coefficients via fft()
-theta2 = angle(X2);
+
+%% Q6  (Estimation for 2nd speaker.)
+% The first speaker is quiet during the period 24800 < n ≤ 25824.
+% Use this to estimate the gain and delay difference between x1[n] and x2[n] for speaker 2.
+% W.r.t. Fig. 1, what is the estimated angle ϑ2?
+
+Range_Q6 = (24800:25824);      % window of samples to investigate - 1025
+N_Q6 = length(Range_Q6);       % number of samples
+X1_Q6 = fft(x1(Range_Q6));     % Fourier coefficients via fft()
+X2_Q6 = fft(x2(Range_Q6));
+f_Q6 = (0:(N_Q6-1))/N_Q6*fs;   % Frequency scale
+t_Q6 = (0:(N_Q6-1))/N_Q6*(1025*sampleTime);    % Time scale for inverse 
+theta_Q6=angle(X2_Q6);
+
+delta_Q6= angle(X2_Q6)-angle(X1_Q6);
+G_Q6=abs(X2_Q6)./abs(X1_Q6);  % Gain between between 2 signals in range
+
 figure();
-plot(f, theta2);
-title('Phase Angle vs Frequency');
+subplot(2,1,1);
+plot(f_Q6,abs(X2_Q6)); % plot magnitude of coefficient
+title("fourier magnitude of X2");
+xlabel("frequency f / [Hz]"); % label axes
+ylabel("magnitude");
+
+subplot(2,1,2);
+plot(f_Q6,abs(X1_Q6)); % plot magnitude of coefficient
+title("fourier magnitude of X1");
+xlabel("frequency f / [Hz]"); % label axes
+ylabel("magnitude");
+
+%mag diff from plots = 0.1569 - is this gain difference? may need to find
+%the difference in magnitude between both transforms although mag is not
+%equal to gain
+%Gain Diff
+
+figure();
+plot(f_Q6,G_Q6); % plot magnitude of coefficient
+title("Mag diff between both tarnsforms");
+xlabel("frequency f / [Hz]"); % label axes
+ylabel("magnitude");
+
+
+%plotting angles
+figure();
+subplot(2,1,1);
+plot(f_Q6,angle(X1_Q6)); % plot magnitude of coefficient
+title("fourier angle of X1");
+xlabel("frequency f / [Hz]"); % label axes
+ylabel("angle");
+
+subplot(2,1,2);
+plot(f_Q6,theta_Q6); % plot magnitude of coefficient
+title("fourier angle of X2");
+xlabel("frequency f / [Hz]"); % label axes
+ylabel("angle");
+
+%delay difference angle
+phaseQ6 = angle(X2_Q6) - angle(X1_Q6);
+figure();
+
+plot(f_Q6, phaseQ6);
+title('Delay Difference vs Frequency');
 xlabel('Frequency (Hz)');
-ylabel('Phase Angle (radians)');
-%spikes between 3 and -3 so find 3 radians in degrees = +/- 171.887 degrees
+ylabel('Delay Difference (radians)');
+
+%subplot 2,1,2 has radians spiking from ranges [3 -3] therefore in degrees
+%+/- 171.887 degrees - theta 2. 
+
+%delay difference from graph
+%inverse attempt - unsure - using time domain from inverse fourier we found
+%that delay is 1 full sample (0.125) - inverse fourier in time domain 
+% - tried - from what i can understand the delay is literally just the time
+% of the full sample size
+delaydiff = ifft(X2_Q6 ./ X1_Q6);
+
+figure();
+plot(t_Q6, delaydiff);
+title('Delay Difference vs Frequency');
+xlabel('Ang Frequency (Rad/s)');
+ylabel('Delay Difference');
+
+
+%phase delay function found from matlab website, a little more confident
+%with this
+delay = phasedelay(X1_Q6,X2_Q6,1025); %set to 1025 to fit freq vector
+figure();
+plot(f_Q6,delay);
+%not alongside the method i thought of in q5
+
+
+
+%delay = gradient change in 1/8th of frequency so 1000hz
+
+
+%% Q7 (Estimation of relative transfer functions.) 
+% Using the estimated relative gains and delays for the two speakers
+% determine the matrix of relative transfer functions H (z) •—◦ H[n]
+
+%Fourier transform function= G(X2)/G(X1)
+GainH_Q7=abs(G_Q6/G_Q5);
+PhaseH_Q7=angle(theta_Q6/thetaQ5);
+Hz=[GainH_Q7, PhaseH_Q7];
+%[GainH_Q7 PhaseH_Q7]
+
+%Transfer Function
+% Given gain and delay differences for both speakers use estimations
+tau_Q5 = 171.887;   % Replace with your actual delay difference for speaker 1
+tau_Q6 = 171.887; % Replace with your actual delay difference for speaker 2
+
+% Angular frequency vector
+omega = 2 * pi * f; % f is the frequency vector from your analysis
+
+% Calculate the relative transfer functions
+H_Q5 = G_Q5 * exp(-1i * omega * tau_Q5);
+H_Q6 = G_Q6 * exp(-1i * omega * tau_Q6);
+
+% Matrix of relative transfer functions
+H = [H_Q5; H_Q6];
+
+
+
+
+%% Question 8 (Construction of separation filters.)
+% Based on your estimated H (z), construct and implement the unmixing matrix G(z) = inv(H(z))
+% What do the output signals of G(z) sound like?
+
+%Gz=inv(Hz); no idea,, idk if need to implement below code from
+%Appendix A or nah. 
+
+
+%Look at Q10 in advance its asking to adjust the rho value, therefore maybe
+%need to adjust it.
+
+%Matrix inversion
+%Hinv = pinv(H);
+%sound(abs(Hinv));
+
+[Hinv] = AssignmentScenario(StudRegNum);
+sound(x1,fs);

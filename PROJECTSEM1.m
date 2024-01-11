@@ -19,7 +19,6 @@ sound(x1,8000);
 
 %from plot this is a discrete time signal. therefore period equals time between 2 points
 x1F200Samples = x1(1:200);
-Ts = 1/fs; % sampling period [s]
 t = (1:200)/fs;
 fo = (2*pi)/Ts; % signal angular freq = 50,265.482
 foeqn = (2*pi*fo/fs);
@@ -80,20 +79,23 @@ x2fsamplesQ3 = x2(19500:21548);
 %so with parameters you are dealing with x1 and x2 as a whole so set yur
 %time parameter to 0.000225 * 35999(number of x1 and samples)
 %time delay for full of x1 and x2  = 4.499875
-tQ3 = (0:Ts:0.256);
+%tQ3 = (0:Ts:0.256);
+tQ3 = (19500:21548)/fs;
 %time delay for full of x1 and x2  = );
 
 figure(3);
-subplot(2,1,1)
 plot(tQ3,x1fsamplesQ3);
 title("analysis q3")
 xlabel("time(s)"); % label axes
 ylabel("sample parameters");
-subplot(2,1,2)
+hold on
 plot(tQ3,x2fsamplesQ3);
 title("analysis q3")
 xlabel("time(s)"); % label axes
 ylabel("sample parameters");
+legend('x1fsample', 'x2fsample');
+%xlim([19501 19508]) - delay = 0.26ms
+
 %%attempted to estimate 2 similar peaks then figure out delay between them.
 
 
@@ -104,7 +106,7 @@ cross_corr = xcorr(x2fsamplesQ3, x1fsamplesQ3);
 % Estimate the relative delay in terms of sample indices
 relative_delay = max_index - length(x1fsamplesQ3);
 fprintf('Relative delay between x1 and x2: %d samples\n', relative_delay);
-%comes out to 1 samples
+%comes out to 1 sample
 
 
 %% Q4
@@ -151,16 +153,34 @@ N = length(Range); % number of samples
 X1 = fft(x1(Range));% Fourier coefficients via fft()
 X2 = fft(x2(Range));
 f = (0:(N-1))/N*fs; % frequency scale
+G_Q5 = abs(X2) ./ abs(X1); % Fourier coefficients via fft()
+
+%Mag plot
 figure();
-subplot(2, 1, 1);
 plot(f,abs(X1)); % plot magnitude of coefficient
 xlabel('frequency f / [Hz]'); % label axes
 ylabel('magnitude');
-G_Q5 = fft(x2(Range)); % Fourier coefficients via fft()
-subplot(2, 1, 2);
+title('Mag diff');
+hold on;
 plot(f,abs(X2)); % plot magnitude of coefficient
+legend('X1', 'X2');
+
+figure();
+plot(f,abs(X1)); % plot magnitude of coefficient
 xlabel('frequency f / [Hz]'); % label axes
 ylabel('magnitude');
+hold on;
+plot(f,abs(X2)); % plot magnitude of coefficient
+title('Mag diff');
+legend('X1', 'X2');
+xlim([199.218 199.220]); %mag diff taken from plot is 0.9
+%xlim([415.300 415.320]);
+
+%Gain Plot
+figure();
+plot(f,G_Q5); % plot magnitude of coefficient
+xlabel('frequency f / [Hz]'); % label axes
+ylabel('Gain');
 
 %The gain and delay difference plots will provide insights into how the signals
 %x1[n] and x2[n]​ differ in terms of magnitude and phase across different frequencies.
@@ -168,13 +188,30 @@ ylabel('magnitude');
 %difference
 %from angle plot delay estimate = 0.3 radians, 17.1887 degrees
 
-%part 2
-thetaQ5 = angle(X1);
+
+%Delay
+A3Q5 = angle(X2./X1);
 figure();
-plot(f, thetaQ5);
+plot(f,A3Q5); % plot magnitude of coefficient
+xlabel('frequency f / [Hz]'); % label axes
+ylabel('Angle of delay Rad/s');
+hold on;
+mq5 = -0.0016207;
+yq5= mq5 *f;
+plot(f,yq5); % plot magnitude of coefficient
+xlabel('frequency f / [Hz]'); % label axes
+ylabel('Angle of delay Rad/s');
+
+
+
+%part 2
+AQ5 = angle(X1); %estimated angle found - 30 deg
+figure();
+plot(f, AQ5);
 title('Phase Angle vs Frequency');
 xlabel('Frequency (Hz)');
 ylabel('Phase Angle (radians)');
+
 %spikes between 3 and -3 so find 3 radians in degrees = +/- 171.887 degrees
 %could maybe take one angle away from other to understand the phase delay,
 %maybe inverse the fourier transform to the time domain and then estimate
@@ -215,14 +252,26 @@ ylabel("magnitude");
 %mag diff from plots = 0.1569 - is this gain difference? may need to find
 %the difference in magnitude between both transforms although mag is not
 %equal to gain
-%Gain Diff
+
+
+%Gain Diff - dont think this is necessary
 
 figure();
 plot(f_Q6,G_Q6); % plot magnitude of coefficient
-title("Mag diff between both tarnsforms");
+title("Gain of both sample ranges");
 xlabel("frequency f / [Hz]"); % label axes
-ylabel("magnitude");
-
+ylabel("Gain");
+hold on;
+plot(f,G_Q5);
+figure();
+plot(f_Q6,G_Q6); % plot magnitude of coefficient
+title("Gain but zoomed in");
+xlabel("frequency f / [Hz]"); % label axes
+ylabel("Gain");
+hold on;
+plot(f,G_Q5);
+legend('GQ6', 'GQ5');
+xlim([1800 1815]); % at similar peak GQ6 - 1810.73 & GQ5 - 1804.69 gain diff = 6.04
 
 %plotting angles
 figure();
@@ -240,40 +289,15 @@ ylabel("angle");
 
 %delay difference angle
 phaseQ6 = angle(X2_Q6) - angle(X1_Q6);
+AQ6 = unwrap(phaseQ6);
 figure();
 
-plot(f_Q6, phaseQ6);
+plot(f_Q6, AQ6);
 title('Delay Difference vs Frequency');
 xlabel('Frequency (Hz)');
 ylabel('Delay Difference (radians)');
+xlim([0 8000]); %delay = gradient change in 1/8th of frequency so 1000hz - 2.34798RAD/s or 0.3737ms
 
-%subplot 2,1,2 has radians spiking from ranges [3 -3] therefore in degrees
-%+/- 171.887 degrees - theta 2. 
-
-%delay difference from graph
-%inverse attempt - unsure - using time domain from inverse fourier we found
-%that delay is 1 full sample (0.125) - inverse fourier in time domain 
-% - tried - from what i can understand the delay is literally just the time
-% of the full sample size
-delaydiff = ifft(X2_Q6 ./ X1_Q6);
-
-figure();
-plot(t_Q6, delaydiff);
-title('Delay Difference vs Frequency');
-xlabel('Ang Frequency (Rad/s)');
-ylabel('Delay Difference');
-
-
-%phase delay function found from matlab website, a little more confident
-%with this
-delay = phasedelay(X1_Q6,X2_Q6,1025); %set to 1025 to fit freq vector
-figure();
-plot(f_Q6,delay);
-%not alongside the method i thought of in q5
-
-
-
-%delay = gradient change in 1/8th of frequency so 1000hz
 
 
 %% Q7 (Estimation of relative transfer functions.) 
